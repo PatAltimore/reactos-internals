@@ -1,0 +1,16 @@
+{
+  "name": "ReactOS Internals",
+  "short_name": "ReactOS Internals",
+  "description": "A guided, annotated tour of the ReactOS source for people who want to contribute.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

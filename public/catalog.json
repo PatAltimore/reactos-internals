@@ -1,0 +1,373 @@
+{
+  "programs": [
+    {
+      "slug": "reactos",
+      "title": "ReactOS Internals",
+      "subtitle": "Windows NT-compatible OS, 1996-present",
+      "author": "The ReactOS Project",
+      "year": 1996,
+      "language": "C, x86 Assembly",
+      "description": "An open-source operating system built to run Windows NT software and drivers, written clean-room from public documentation. This tour follows one CreateFileW call from kernel32 down to the file system driver, with notes on where a new contributor can help.",
+      "github_url": "https://github.com/reactos/reactos",
+      "files": [
+        {
+          "order": 1,
+          "slug": "create-c",
+          "title": "create.c",
+          "description": "CreateFileW: how the Win32 file API is translated into the NT native call NtCreateFile",
+          "path": "dll/win32/kernel32/client/file/create.c",
+          "generated": true
+        },
+        {
+          "order": 2,
+          "slug": "syscalls-inc",
+          "title": "syscalls.inc",
+          "description": "The macros that turn the syscall list into one tiny stub per NT function",
+          "path": "sdk/include/asm/syscalls.inc",
+          "generated": true
+        },
+        {
+          "order": 3,
+          "slug": "dispatch-s",
+          "title": "dispatch.S",
+          "description": "ntdll's user-mode entry points: the two ways a syscall crosses into the kernel, plus APC and exception dispatch",
+          "path": "dll/ntdll/dispatch/i386/dispatch.S",
+          "generated": true
+        },
+        {
+          "order": 4,
+          "slug": "trap-s",
+          "title": "trap.s",
+          "description": "The kernel's interrupt descriptor table and the assembly entry points for system calls",
+          "path": "ntoskrnl/ke/i386/trap.s",
+          "generated": true
+        },
+        {
+          "order": 5,
+          "slug": "traphdlr-c",
+          "title": "traphdlr.c",
+          "description": "KiSystemServiceHandler: how a system call number becomes a function call in the kernel",
+          "path": "ntoskrnl/ke/i386/traphdlr.c",
+          "generated": true
+        },
+        {
+          "order": 6,
+          "slug": "file-c",
+          "title": "file.c",
+          "description": "The I/O manager's file object code: from NtCreateFile through IopCreateFile and IopParseDevice to the driver's IRP_MJ_CREATE",
+          "path": "ntoskrnl/io/iomgr/file.c",
+          "generated": true
+        },
+        {
+          "order": 7,
+          "slug": "obname-c",
+          "title": "obname.c",
+          "description": "The object manager's namespace walk: how a path like \\??\\C:\\hello.txt is resolved, including symbolic links and parse routines",
+          "path": "ntoskrnl/ob/obname.c",
+          "generated": true
+        },
+        {
+          "order": 8,
+          "slug": "ntcreatefile-c",
+          "title": "NtCreateFile.c",
+          "description": "A 43-line apitest: the quickest way to see how ReactOS proves it matches Windows",
+          "path": "modules/rostests/apitests/ntdll/NtCreateFile.c",
+          "generated": true
+        },
+        {
+          "order": 109,
+          "slug": "smss",
+          "title": "smss.c",
+          "description": "The Session Manager, first user-mode process: next stop on the boot-to-desktop path",
+          "path": "base/system/smss/smss.c",
+          "generated": false
+        },
+        {
+          "order": 110,
+          "slug": "winlogon",
+          "title": "winlogon.c",
+          "description": "Logon, session and desktop startup",
+          "path": "base/system/winlogon/winlogon.c",
+          "generated": false
+        },
+        {
+          "order": 111,
+          "slug": "freeldr",
+          "title": "freeldr.c",
+          "description": "FreeLoader, the bootloader that loads the kernel",
+          "path": "boot/freeldr/freeldr/freeldr.c",
+          "generated": false
+        },
+        {
+          "order": 112,
+          "slug": "ex-init",
+          "title": "init.c",
+          "description": "Executive initialisation: how the kernel boots its subsystems",
+          "path": "ntoskrnl/ex/init.c",
+          "generated": false
+        },
+        {
+          "order": 113,
+          "slug": "ldrinit",
+          "title": "ldrinit.c",
+          "description": "The user-mode loader: how processes and DLLs start",
+          "path": "dll/ntdll/ldr/ldrinit.c",
+          "generated": false
+        },
+        {
+          "order": 114,
+          "slug": "obhandle",
+          "title": "obhandle.c",
+          "description": "Handle tables: how a HANDLE maps to an object",
+          "path": "ntoskrnl/ob/obhandle.c",
+          "generated": false
+        },
+        {
+          "order": 115,
+          "slug": "virtual",
+          "title": "virtual.c",
+          "description": "Virtual memory services (VirtualAlloc and friends) in the memory manager",
+          "path": "ntoskrnl/mm/ARM3/virtual.c",
+          "generated": false
+        },
+        {
+          "order": 116,
+          "slug": "irp",
+          "title": "irp.c",
+          "description": "IRP allocation and completion: the other half of the driver story",
+          "path": "ntoskrnl/io/iomgr/irp.c",
+          "generated": false
+        },
+        {
+          "order": 117,
+          "slug": "message",
+          "title": "message.c",
+          "description": "Window message queues: where a mouse click becomes a WM_ message",
+          "path": "win32ss/user/ntuser/message.c",
+          "generated": false
+        }
+      ],
+      "introduction": "ReactOS is an attempt to answer an audacious question: could you build an operating system that runs Windows programs and Windows drivers, without ever looking at how Windows itself is written? The project began in the late 1990s and has been developed in the open ever since, by volunteers working from public documentation, published APIs and careful black-box testing of how Windows behaves. Today it boots on real hardware and in virtual machines, runs a good amount of ordinary Windows software, and is still officially alpha quality.\n\nThat ambition shapes the code. ReactOS copies the architecture of Windows NT: a Win32 layer that applications call, a thin native API in ntdll, and below the user/kernel boundary an executive made of cooperating managers for objects, I/O, memory, processes, security and the registry. Learning ReactOS is therefore also learning how NT is organised, and that is why this tour follows a single, ordinary call through every layer. When a program asks CreateFileW to open a file, the request is translated by kernel32, packaged as a system call by ntdll, trapped into the kernel, dispatched by number, resolved by the object manager as a path through a namespace, and finally delivered to a file system driver as an I/O request packet.\n\nThe tour is written for someone who wants to contribute, so each annotation says what the code does and also where a newcomer could help: which tests already pin the behaviour down, which code is delicate and best left to maintainers, and which small oddities deserve a closer look. Comparing ReactOS against Windows behaviour is the daily work of the project, and the tests in modules/rostests are how that comparison is written down. The final file in this tour is a short test, because reading one is the quickest way to see how a fix gets proven.\n\nOne rule comes before any code. ReactOS cannot accept contributions from anyone who has seen Microsoft Windows source code, including leaked sources or the Windows Research Kernel, and contributors are asked to affirm that. Learn from documentation, from experiments, and from the ReactOS and Wine code itself. The project's CONTRIBUTING.md also asks for a real name and email on every commit, small focused pull requests, and the project coding style.\n\nTo start contributing, build ReactOS with the ReactOS Build Environment, boot it in a virtual machine, and look at the failing tests on reactos.org/testman or at issues labelled starter-project in the project's JIRA at jira.reactos.org. Read CONTRIBUTING.md and CODING_STYLE.md in the repository, and ask questions in the project chat. Then come back to the files here when a task takes you into one of these layers.",
+      "image_url": "",
+      "image_caption": "",
+      "highlights": [
+        {
+          "id": "one-call-six-layers",
+          "title": "One Call Through Six Layers",
+          "description": "A single CreateFileW call touches every major layer of an NT-style operating system. Kernel32 translates Win32 arguments, a generated stub in ntdll numbers the call, a trap instruction crosses into the kernel, a dispatcher turns the number into a function call, the I/O manager packages the request, and the object manager resolves the path and hands the rest to a device. Following this one path gives a working map of ReactOS and of Windows NT, and makes later topics such as boot, memory management and drivers much easier to place. If you read only one thing in this museum before starting on a contribution, read these files in order.",
+          "links": [
+            {
+              "label": "Kernel32 makes the NT call",
+              "file": "create-c",
+              "enhancement": "nt-call"
+            },
+            {
+              "label": "The generated user-mode stub",
+              "file": "syscalls-inc",
+              "enhancement": "x86-user-stub"
+            },
+            {
+              "label": "The trap into the kernel",
+              "file": "trap-s",
+              "enhancement": "system-service-entry"
+            },
+            {
+              "label": "The number becomes a function call",
+              "file": "traphdlr-c",
+              "enhancement": "dispatch-call"
+            },
+            {
+              "label": "The system call itself",
+              "file": "file-c",
+              "enhancement": "ntcreatefile"
+            },
+            {
+              "label": "The name walk reaches the device",
+              "file": "obname-c",
+              "enhancement": "parse-routine-call"
+            }
+          ]
+        },
+        {
+          "id": "win32-translation-layer",
+          "title": "Win32 Is a Translation Layer",
+          "description": "Much of kernel32 is careful translation between two vocabularies. Win32 creation dispositions become NT dispositions, Win32 flags become NT create options, DOS paths become NT paths, and NT status codes are mapped back to the error numbers programs read with GetLastError. Every one of these mappings is a place where ReactOS must match Windows exactly, because real applications depend on the details, including the odd rule that a successful call can still set ERROR_ALREADY_EXISTS. That makes kernel32 a productive place for a newcomer to find and fix compatibility gaps, using tests to prove each change.",
+          "links": [
+            {
+              "label": "Five verbs, five dispositions",
+              "file": "create-c",
+              "enhancement": "disposition-translation"
+            },
+            {
+              "label": "Flags and access rights",
+              "file": "create-c",
+              "enhancement": "flag-translation"
+            },
+            {
+              "label": "NT status back to Win32 errors",
+              "file": "create-c",
+              "enhancement": "error-mapping"
+            },
+            {
+              "label": "Success that still sets an error",
+              "file": "create-c",
+              "enhancement": "success-last-error"
+            }
+          ]
+        },
+        {
+          "id": "syscall-number-is-position",
+          "title": "The Syscall Number Is a Line Number",
+          "description": "ReactOS does not hand-write its system call stubs. A list of function names in ntoskrnl/sysfuncs.lst is expanded by assembler macros into one small stub per function, and the syscall number is simply a counter that increases with each entry. The kernel builds its service table from the same list, which keeps both sides in agreement. The consequence for contributors is practical: the order of that list is part of an interface, and the byte count next to each name must match the function's real arguments. Understanding this also demystifies tools that show raw system call numbers in a debugger.",
+          "links": [
+            {
+              "label": "A counter that increments",
+              "file": "syscalls-inc",
+              "enhancement": "syscall-id-counter"
+            },
+            {
+              "label": "Nt and Zw share user-mode code",
+              "file": "syscalls-inc",
+              "enhancement": "stub-u-macro"
+            },
+            {
+              "label": "Splitting the number in the kernel",
+              "file": "traphdlr-c",
+              "enhancement": "decode-number"
+            },
+            {
+              "label": "The per-function argument size",
+              "file": "traphdlr-c",
+              "enhancement": "argument-bytes"
+            }
+          ]
+        },
+        {
+          "id": "names-are-walked",
+          "title": "Names Are Walked, Not Looked Up",
+          "description": "In NT, opening a file is a walk through a namespace of objects. The path \\??\\C:\\hello.txt starts in a directory of DOS device names, follows C: as a symbolic link to a device, and then hands the remaining \\hello.txt to that device's parse routine, which builds a file object and sends an IRP to the file system driver. Because the object manager only knows about parse routines, it never needs to understand file systems, and the same mechanism opens registry keys and other named things. The reparse limit of 30 keeps symbolic link cycles from hanging the kernel.",
+          "links": [
+            {
+              "label": "The namespace walker",
+              "file": "obname-c",
+              "enhancement": "lookup-signature"
+            },
+            {
+              "label": "Where the device takes over",
+              "file": "obname-c",
+              "enhancement": "parse-routine-call"
+            },
+            {
+              "label": "Starting over after a reparse",
+              "file": "obname-c",
+              "enhancement": "reparse-status"
+            },
+            {
+              "label": "Building IRP_MJ_CREATE",
+              "file": "file-c",
+              "enhancement": "allocate-irp"
+            }
+          ]
+        },
+        {
+          "id": "tests-are-the-way-in",
+          "title": "Tests Are the Way In",
+          "description": "The project's own guidance for newcomers is to start with tests: find a failing test and make it pass, or write a missing one. An apitest is a small program that calls an API and checks the result against what Windows does, and the 43-line NtCreateFile test here shows the whole shape. The same layers described in the other files each have tests: ntdll, kernel32 and so on under modules/rostests/apitests. A change with a test that fails before and passes after is easy for maintainers to review, which is why it is the best way to make a first contribution.",
+          "links": [
+            {
+              "label": "Anatomy of an apitest",
+              "file": "ntcreatefile-c",
+              "enhancement": "start-test"
+            },
+            {
+              "label": "Probing a bad pointer",
+              "file": "ntcreatefile-c",
+              "enhancement": "bad-pointer-test"
+            },
+            {
+              "label": "Adding the next case",
+              "file": "ntcreatefile-c",
+              "enhancement": "misaligned-test"
+            },
+            {
+              "label": "A line worth checking with a test",
+              "file": "create-c",
+              "enhancement": "trailing-backslash-check"
+            }
+          ]
+        },
+        {
+          "id": "read-the-error-paths",
+          "title": "Read the Error Paths",
+          "description": "Operating system code spends much of its length on what happens when something goes wrong, and the seams between layers are where behaviour differs from Windows. Two statuses must be reconciled after an open, a parse routine can ask to start over, kernel and user mode treat the same pointer differently, and unfinished spots are marked as unimplemented. These are good places to read closely, because a mismatch with Windows here is a bug a test can demonstrate, and many contributions begin as a careful reading of an error branch.",
+          "links": [
+            {
+              "label": "Reconciling two statuses",
+              "file": "file-c",
+              "enhancement": "two-statuses"
+            },
+            {
+              "label": "Validation of user parameters",
+              "file": "file-c",
+              "enhancement": "iopcreatefile-validation"
+            },
+            {
+              "label": "Bad numbers and GUI conversion",
+              "file": "traphdlr-c",
+              "enhancement": "validate-and-gui"
+            },
+            {
+              "label": "Mapping status codes",
+              "file": "create-c",
+              "enhancement": "error-mapping"
+            }
+          ]
+        }
+      ],
+      "diagrams": [
+        {
+          "title": "Architecture: the layers of an NT-style system",
+          "caption": "ReactOS keeps the Windows NT layering. User-mode code reaches the kernel only through system calls; graphical calls go to win32k, everything else to the ntoskrnl executive.",
+          "code": "flowchart TB\n  subgraph UM[\"User mode\"]\n    APP[\"Applications\"]\n    W32[\"Win32 DLLs: kernel32, advapi32, user32, gdi32\"]\n    SUBSYS[\"System processes: smss, csrss, winlogon\"]\n    NTDLL[\"ntdll: native API stubs and the loader\"]\n  end\n  subgraph KM[\"Kernel mode\"]\n    subgraph EXEC[\"ntoskrnl executive\"]\n      KE[\"ke: traps, scheduler, dispatcher\"]\n      OB[\"ob: objects, handles, names\"]\n      IO[\"io: I/O manager, IRPs\"]\n      MM[\"mm: memory\"]\n      PS[\"ps: processes and threads\"]\n      CM[\"cm: registry\"]\n      SE[\"se: security\"]\n    end\n    W32K[\"win32k: window manager and GDI\"]\n    DRV[\"Drivers: file systems, storage, input, network\"]\n    HAL[\"HAL\"]\n  end\n  HW[\"Hardware\"]\n  APP --> W32\n  APP --> NTDLL\n  W32 --> NTDLL\n  SUBSYS --> NTDLL\n  NTDLL -->|system call| KE\n  W32 -->|win32k system call| W32K\n  KE --> OB\n  KE --> IO\n  KE --> MM\n  KE --> PS\n  KE --> CM\n  KE --> SE\n  IO --> DRV\n  DRV --> HAL\n  W32K --> HAL\n  HAL --> HW\n"
+        },
+        {
+          "title": "The journey of one CreateFileW call",
+          "caption": "The path this tour follows. Each participant is a layer you can read in the files below.",
+          "code": "sequenceDiagram\n  participant App as Application\n  participant K32 as kernel32 (create.c)\n  participant NT as ntdll (stub)\n  participant KE as ke (trap.s, traphdlr.c)\n  participant IO as io manager (file.c)\n  participant OB as object manager (obname.c)\n  participant FS as file system driver\n  App->>K32: CreateFileW(path, access, ...)\n  K32->>K32: translate flags, convert DOS path to NT path\n  K32->>NT: NtCreateFile(...)\n  NT->>KE: system call, eax holds the number\n  KE->>KE: KiSystemServiceHandler picks the handler from the table\n  KE->>IO: NtCreateFile\n  IO->>IO: IoCreateFile, IopCreateFile, build OPEN_PACKET\n  IO->>OB: ObOpenObjectByName\n  OB->>OB: walk the name, follow the C: symbolic link\n  OB->>IO: IopParseDevice(remaining name)\n  IO->>FS: IRP_MJ_CREATE via IoCallDriver\n  FS-->>IO: status\n  IO-->>KE: handle and status\n  KE-->>NT: return to user mode\n  NT-->>K32: NTSTATUS\n  K32-->>App: HANDLE, or INVALID_HANDLE_VALUE with last error set\n"
+        }
+      ]
+    }
+  ],
+  "guides": [
+    {
+      "slug": "start",
+      "title": "Before you start",
+      "description": "The clean-room rule, ground rules and the path"
+    },
+    {
+      "slug": "build",
+      "title": "Build and boot",
+      "description": "Toolchain, configure, ninja, boot in a VM"
+    },
+    {
+      "slug": "find-work",
+      "title": "Find your first task",
+      "description": "Where to look and how to pick"
+    },
+    {
+      "slug": "tests",
+      "title": "Tests",
+      "description": "The rostests layout and how to use it"
+    },
+    {
+      "slug": "style",
+      "title": "Code style",
+      "description": "Coding style and the formatting tools"
+    },
+    {
+      "slug": "workflow",
+      "title": "Workflow",
+      "description": "From change to pull request"
+    }
+  ]
+}

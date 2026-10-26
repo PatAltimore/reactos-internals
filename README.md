@@ -1,35 +1,36 @@
-# ReactOS Internals Museum
+# ReactOS Internals
 
-A guided tour of the [ReactOS](https://github.com/PatAltimore/reactos) source, built as a set of *exhibits*.
-Each exhibit follows one thing (a call, a boot, a click) through the code, with links to the exact lines.
+A guided, annotated tour of the [ReactOS](https://github.com/reactos/reactos) source for people who want to contribute.
 
-- Source snapshot: fork `master` @ `e46f4bb1` (links pin to this commit, so line numbers stay valid).
-- Local copy: `git clone --depth 1 https://github.com/PatAltimore/reactos.git reactos` (git-ignored).
+- **The tour:** real ReactOS source files with inline annotations, following one `CreateFileW` call from kernel32 down to the file system driver, plus architecture diagrams.
+- **Contributor's guide:** the clean-room rule, building, finding a first task, tests, code style and the pull request workflow, summarized from the project's own documents.
 
-## Floor plan
+The site is built on the [Code Museum](https://github.com/PatAltimore/code-museum) reader, specialised to a single program. Pages are published from `public/` by `.github/workflows/pages.yml` (Settings, Pages, Source: GitHub Actions).
 
-| Directory | What lives there |
-|---|---|
-| `ntoskrnl/` | Kernel executive: `ke` scheduler/traps, `mm` memory, `ob` objects, `io`, `ps` processes, `cm` registry, `se` security |
-| `hal/` | Hardware abstraction layer |
-| `dll/ntdll/` | User/kernel boundary: syscall stubs, loader, heap |
-| `dll/win32/` | `kernel32`, `advapi32`, ... the APIs apps call |
-| `win32ss/` | Win32 subsystem: `user/` windows and messages, `gdi/`, `csrss` |
-| `base/system/` | `smss`, `winlogon`, services; `base/shell/explorer` is the desktop |
-| `boot/freeldr/` | Bootloader |
-| `drivers/` | Storage, filesystems, network, USB, ... |
-| `sdk/` | Headers and shared libraries |
+## Layout
 
-## Exhibits
+```
+public/
+├── index.html, css/, js/app.js   # the reader (hash-routed single page app)
+├── catalog.json                  # program, files, highlights, diagrams, guide list
+├── programs/reactos/*.md         # annotated source: YAML frontmatter + the code
+└── guide/*.md                    # contributor guide pages (Markdown)
+```
 
-| # | Exhibit | Status |
-|---|---|---|
-| 1 | [A syscall's journey: `CreateFileW` to the file system driver](exhibits/01-syscall-journey.md) | ready |
-| 2 | Boot to desktop (FreeLoader, ntoskrnl, smss, winlogon, explorer) | planned |
-| 3 | Objects and handles (`ob`) | planned |
-| 4 | Memory: sections, VADs, page faults | planned |
-| 5 | A mouse click's journey (driver, win32k, user32) | planned |
-| 6 | Drivers and IRPs | planned |
-| 7 | The registry (`cm`) and the PE/DLL loader | planned |
+Each annotated file is a Markdown file whose frontmatter lists `enhancements` anchored to line ranges of the code below it. Code links and line numbers refer to the fork snapshot `PatAltimore/reactos` @ `e46f4bb1`. A local clone for reading the source goes in `reactos/` (git-ignored):
 
-Start with Exhibit 1: it crosses every layer, so it gives you the map for everything else.
+```bash
+git clone --depth 1 https://github.com/PatAltimore/reactos.git reactos
+```
+
+## Running locally
+
+```bash
+npx serve public
+```
+
+Diagrams are [Mermaid](https://mermaid.js.org) and the guide uses [marked](https://marked.js.org); both load from the CDN, pinned with integrity hashes, only on pages that need them.
+
+## Contributing to this site
+
+Annotations are hand-written, so please verify line numbers against the pinned commit. ReactOS is clean-room: never base annotations on Microsoft Windows source code.
