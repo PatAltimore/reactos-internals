@@ -344,7 +344,7 @@ a:hover {
 
 .intro-paragraph {
   color: var(--text);
-  font-size: 0.975rem;
+  font-size: calc(var(--prose-size) * 0.975);
   line-height: 1.75;
   max-width: 65ch;
   margin-bottom: 1.2rem;

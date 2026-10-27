@@ -746,12 +746,10 @@ function renderHeader(opts = {}) {
     <button class="theme-btn" data-theme-btn="dark"  onclick="setTheme('dark')"  title="Dark theme">Dark</button>
     <button class="theme-btn" data-theme-btn="light" onclick="setTheme('light')" title="Light theme">Light</button>
   </div>`;
-  if (fileTitle) {
-    right += `<div class="font-size-controls">
-      <button onclick="adjustFontSize(-1)" title="Smaller">A−</button>
-      <button onclick="adjustFontSize(1)" title="Larger">A+</button>
-    </div>`;
-  }
+  right += `<div class="font-size-controls">
+    <button onclick="adjustFontSize(-1)" title="Smaller text">A−</button>
+    <button onclick="adjustFontSize(1)" title="Larger text">A+</button>
+  </div>`;
   if (githubUrl) {
     right += `<a class="btn-icon" href="${escapeAttr(safeUrl(githubUrl))}" target="_blank" rel="noopener">GitHub ↗</a>`;
   }
@@ -977,12 +975,26 @@ function getProgramFromCatalog(catalog, slug) {
 let currentFontSize = 13;
 let currentProseSize = 16;
 
+function applyFontSize() {
+  document.documentElement.style.setProperty('--code-size', currentFontSize + 'px');
+  document.documentElement.style.setProperty('--prose-size', currentProseSize + 'px');
+}
+
 window.adjustFontSize = function(delta) {
   currentFontSize = Math.max(10, Math.min(20, currentFontSize + delta));
   currentProseSize = Math.max(13, Math.min(23, currentProseSize + delta));
-  document.documentElement.style.setProperty('--code-size', currentFontSize + 'px');
-  document.documentElement.style.setProperty('--prose-size', currentProseSize + 'px');
+  applyFontSize();
+  try { localStorage.setItem('fontDelta', String(currentFontSize - 13)); } catch (e) {}
 };
+
+try {
+  const d = parseInt(localStorage.getItem('fontDelta'), 10);
+  if (!isNaN(d)) {
+    currentFontSize = Math.max(10, Math.min(20, 13 + d));
+    currentProseSize = Math.max(13, Math.min(23, 16 + d));
+    applyFontSize();
+  }
+} catch (e) {}
 
 const app = document.getElementById('app');
 
