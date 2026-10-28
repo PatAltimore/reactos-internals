@@ -1416,3 +1416,22 @@ html[data-theme="light"] .hljs-name        { color: #0000ff; }
 .guide-card:hover { border-color: var(--accent); }
 .guide-card-title { font-weight: 600; }
 .guide-card-desc { color: var(--muted); font-size: .85rem; }
+
+/* Diagram header, expand button and full-screen viewer */
+.diagram-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; }
+.diagram-head .diagram-title { margin: 0; font-weight: 600; }
+.diagram-expand { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: .25rem .6rem; font: inherit; font-size: .8rem; cursor: pointer; white-space: nowrap; }
+.diagram-expand:hover { color: var(--text); border-color: var(--accent); }
+.diagram-canvas svg { cursor: zoom-in; }
+body.dz-open { overflow: hidden; }
+.dz-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; background: var(--bg); }
+.dz-bar { display: flex; align-items: center; gap: .5rem; padding: .5rem .75rem; border-bottom: 1px solid var(--border); background: var(--surface); }
+.dz-title { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dz-hint { color: var(--muted); font-size: .8rem; margin-right: .5rem; }
+.dz-bar button { min-width: 2.2rem; background: none; border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: .3rem .6rem; font: inherit; cursor: pointer; }
+.dz-bar button:hover { border-color: var(--accent); }
+.dz-view { flex: 1; position: relative; overflow: hidden; cursor: grab; touch-action: none; }
+.dz-view.dragging { cursor: grabbing; }
+.dz-stage { position: absolute; top: 0; left: 0; transform-origin: 0 0; will-change: transform; }
+.dz-stage svg { display: block; max-width: none; user-select: none; }
+@media (max-width: 600px) { .dz-hint { display: none; } }

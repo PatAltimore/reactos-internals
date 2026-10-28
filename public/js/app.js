@@ -463,7 +463,10 @@ function diagramCode(raw) {
 
 function renderDiagramFigure(code, title, caption) {
   return `<figure class="diagram">
-  ${title ? `<figcaption class="diagram-title">${escapeHtml(title)}</figcaption>` : ''}
+  <div class="diagram-head">
+    <span class="diagram-title">${escapeHtml(title || 'Diagram')}</span>
+    <button type="button" class="diagram-expand" onclick="openDiagram(this)" title="Open full screen with zoom and pan">⤢ Expand</button>
+  </div>
   <div class="diagram-canvas" data-diagram="${escapeAttr(code)}"><span class="diagram-loading">Loading diagram…</span></div>
   ${caption ? `<figcaption class="diagram-caption">${escapeHtml(caption)}</figcaption>` : ''}
 </figure>`;
@@ -488,11 +491,145 @@ async function renderDiagrams() {
     try {
       const { svg } = await mermaid.render('mmd-' + (++_diagramSeq), el.dataset.diagram);
       el.innerHTML = svg;
+      el.title = 'Click to expand';
+      el.onclick = () => { const b = el.closest('.diagram').querySelector('.diagram-expand'); if (b) openDiagram(b); };
     } catch (err) {
       el.textContent = 'Diagram could not be rendered.';
     }
   }
 }
+
+// ---------------------------------------------------------------------------
+// Full-screen diagram viewer: wheel / buttons / pinch to zoom, drag to pan.
+// ---------------------------------------------------------------------------
+function openDiagram(btn) {
+  const fig = btn.closest('.diagram');
+  const src = fig && fig.querySelector('.diagram-canvas svg');
+  if (!src) return;
+  const title = (fig.querySelector('.diagram-title') || {}).textContent || 'Diagram';
+
+  const svg = src.cloneNode(true);
+  const vb = (svg.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number);
+  const w = vb[2] || src.getBoundingClientRect().width;
+  const h = vb[3] || src.getBoundingClientRect().height;
+  svg.removeAttribute('style');
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+
+  const ov = document.createElement('div');
+  ov.className = 'dz-overlay';
+  ov.setAttribute('role', 'dialog');
+  ov.setAttribute('aria-label', title);
+  ov.innerHTML = `
+    <div class="dz-bar">
+      <span class="dz-title">${escapeHtml(title)}</span>
+      <span class="dz-hint">scroll to zoom, drag to pan</span>
+      <button type="button" data-act="out" title="Zoom out (-)">−</button>
+      <button type="button" data-act="in" title="Zoom in (+)">+</button>
+      <button type="button" data-act="fit" title="Fit to screen (0)">Fit</button>
+      <button type="button" data-act="one" title="Actual size (1)">100%</button>
+      <button type="button" data-act="close" title="Close (Esc)">✕</button>
+    </div>
+    <div class="dz-view"><div class="dz-stage"></div></div>`;
+  const view = ov.querySelector('.dz-view');
+  const stage = ov.querySelector('.dz-stage');
+  stage.appendChild(svg);
+  document.body.appendChild(ov);
+  document.body.classList.add('dz-open');
+
+  let k = 1, tx = 0, ty = 0;
+  const MIN = 0.1, MAX = 8;
+  const apply = () => { stage.style.transform = `translate(${tx}px, ${ty}px) scale(${k})`; };
+  const fit = () => {
+    const r = view.getBoundingClientRect();
+    k = Math.min(r.width / w, r.height / h) * 0.95;
+    k = Math.max(MIN, Math.min(MAX, k));
+    tx = (r.width - w * k) / 2;
+    ty = (r.height - h * k) / 2;
+    apply();
+  };
+  const zoomAt = (factor, cx, cy) => {
+    const nk = Math.max(MIN, Math.min(MAX, k * factor));
+    const f = nk / k;
+    tx = cx - (cx - tx) * f;
+    ty = cy - (cy - ty) * f;
+    k = nk;
+    apply();
+  };
+  const center = () => { const r = view.getBoundingClientRect(); return [r.width / 2, r.height / 2]; };
+
+  const close = () => {
+    document.removeEventListener('keydown', onKey, true);
+    ov.dispatchEvent(new Event('dz-closed'));
+    ov.remove();
+    document.body.classList.remove('dz-open');
+    btn.focus();
+  };
+  function onKey(e) {
+    if (e.key === 'Escape') { e.preventDefault(); close(); }
+    else if (e.key === '+' || e.key === '=') zoomAt(1.25, ...center());
+    else if (e.key === '-' || e.key === '_') zoomAt(0.8, ...center());
+    else if (e.key === '0') fit();
+    else if (e.key === '1') { const [cx, cy] = center(); zoomAt(1 / k, cx, cy); }
+  }
+  document.addEventListener('keydown', onKey, true);
+
+  ov.querySelector('.dz-bar').addEventListener('click', e => {
+    const act = e.target.dataset && e.target.dataset.act;
+    if (act === 'close') close();
+    else if (act === 'in') zoomAt(1.25, ...center());
+    else if (act === 'out') zoomAt(0.8, ...center());
+    else if (act === 'fit') fit();
+    else if (act === 'one') { const [cx, cy] = center(); zoomAt(1 / k, cx, cy); }
+  });
+
+  view.addEventListener('wheel', e => {
+    e.preventDefault();
+    const r = view.getBoundingClientRect();
+    zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+
+  const pointers = new Map();
+  let pinch = 0;
+  view.addEventListener('pointerdown', e => {
+    view.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    view.classList.add('dragging');
+    if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = Math.hypot(a[0] - b[0], a[1] - b[1]); }
+  });
+  view.addEventListener('pointermove', e => {
+    if (!pointers.has(e.pointerId)) return;
+    const prev = pointers.get(e.pointerId);
+    pointers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pointers.size === 1) {
+      tx += e.clientX - prev[0];
+      ty += e.clientY - prev[1];
+      apply();
+    } else if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      const r = view.getBoundingClientRect();
+      if (pinch) zoomAt(d / pinch, (a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top);
+      pinch = d;
+    }
+  });
+  const up = e => {
+    pointers.delete(e.pointerId);
+    pinch = 0;
+    if (!pointers.size) view.classList.remove('dragging');
+  };
+  view.addEventListener('pointerup', up);
+  view.addEventListener('pointercancel', up);
+  view.addEventListener('dblclick', fit);
+
+  // Fit once the overlay has been laid out, and again if the window is resized.
+  requestAnimationFrame(() => requestAnimationFrame(fit));
+  const onResize = () => fit();
+  window.addEventListener('resize', onResize);
+  ov.addEventListener('dz-closed', () => window.removeEventListener('resize', onResize));
+  ov.querySelector('[data-act="close"]').focus();
+}
+window.openDiagram = openDiagram;
 
 function escapeHtml(str) {
   return String(str)
